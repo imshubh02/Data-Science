@@ -20,7 +20,7 @@ for i in range(6):
                 lt(60)
                 fd(10)
             end_fill()
-            circle(100, 360, 30)
+            
 
     
 hideturtle()
