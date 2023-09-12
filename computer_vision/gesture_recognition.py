@@ -45,6 +45,8 @@ with GestureRecognizer.create_from_options(options) as recognizer:
                             1, (0,255,255), 1)
             
             #draw the hand landmarks on the image
+
+            
             for landmark in result.hand_landmarks:
                 for i in landmark:
                     nx, ny = i.x, i.y
