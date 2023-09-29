@@ -1,6 +1,8 @@
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+mp_face_detection = mp.solutions.face_detection
+mp_drawing = mp.solutions.drawing_utils
 import time
 import cv2
 
@@ -30,3 +32,4 @@ with FaceDetector.create_from_options(options) as detector:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
         ts = int(time.time() * 1000)
         detector.detect_async(mp_image, ts)
+
