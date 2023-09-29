@@ -1,35 +1,56 @@
+import cv2
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
-import time
-import cv2
 
-path = 'Mini_Project/blaze_face_short_range.tflite'
+# For static images:
+IMAGE_FILES = []
+with mp_face_detection.FaceDetection(
+    model_selection=1, min_detection_confidence=0.5) as face_detection:
+  for idx, file in enumerate(IMAGE_FILES):
+    image = cv2.imread(file)
+    # Convert the BGR image to RGB and process it with MediaPipe Face Detection.
+    results = face_detection.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
-BaseOptions = mp.tasks.BaseOptions
-FaceDetector = mp.tasks.vision.FaceDetector
-FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
-FaceDetectorResult = mp.tasks.vision.FaceDetectorResult
-VisionRunningMode = mp.tasks.vision.RunningMode
+    # Draw face detections of each face.
+    if not results.detections:
+      continue
+    annotated_image = image.copy()
+    for detection in results.detections:
+      print('Nose tip:')
+      print(mp_face_detection.get_key_point(
+          detection, mp_face_detection.FaceKeyPoint.NOSE_TIP))
+      mp_drawing.draw_detection(annotated_image, detection)
+    cv2.imwrite('/tmp/annotated_image' + str(idx) + '.png', annotated_image)
 
-results = []
-# Create a face detector instance with the live stream mode:
-def process_result(result: FaceDetectorResult, output_image: mp.Image, timestamp_ms: int):
-    results.append(result)
+# For webcam input:
+cap = cv2.VideoCapture(0)
+with mp_face_detection.FaceDetection(
+    model_selection=0, min_detection_confidence=0.5) as face_detection:
+  while cap.isOpened():
+    success, image = cap.read()
+    if not success:
+      print("Ignoring empty camera frame.")
+      # If loading a video, use 'break' instead of 'continue'.
+      continue
 
-options = FaceDetectorOptions(
-    base_options=BaseOptions(model_asset_path=path),
-    running_mode=VisionRunningMode.LIVE_STREAM,
-    result_callback=process_result)
-with FaceDetector.create_from_options(options) as detector:
-    print("Face detection model loaded")
-    cam = cv2.VideoCapture(0)
-    while cam.isOpened():
-        state, image = cam.read()
-        if not state: break
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
-        ts = int(time.time() * 1000)
-        detector.detect_async(mp_image, ts)
+    # To improve performance, optionally mark the image as not writeable to
+    # pass by reference.
+    image.flags.writeable = False
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = face_detection.process(image)
 
+    # Draw the face detection annotations on the image.
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    if results.detections:
+      for detection in results.detections:
+        mp_drawing.draw_detection(image, detection)
+    # Flip the image horizontally for a selfie-view display.
+    cv2.imshow('MediaPipe Face Detection', cv2.flip(image, 1))
+    key = cv2.waitKey(10)
+    if key == 27:
+      break
+      
+cap.release()
+cv2.destroyAllWindows()
