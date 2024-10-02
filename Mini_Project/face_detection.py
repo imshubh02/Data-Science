@@ -3,6 +3,7 @@ import mediapipe as mp
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
 
+
 # For static images:
 image_files = []
 with mp_face_detection.FaceDetection(
@@ -10,7 +11,7 @@ with mp_face_detection.FaceDetection(
   for idx, file in enumerate(image_files):
     image = cv2.imread(file)
    
-    # Convert the BGR image to RGB and process it with MediaPipe Face Detection.
+    # Convert the BGR image to RGB image
     results = face_detection.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
     # Draw face detections of each face.
